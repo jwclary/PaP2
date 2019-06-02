@@ -6,7 +6,7 @@
 ### 2. 5 Star Rating System
 -Completed- Created a star rating system with the Restaurant info from the SQL Database.
 ### 3. Bar Graph Review System
--In Progress-
+-Completed- Created animated bar graphs for the review scores in the restaurant reviews Database.
 ### 4. Card Game
 -In Progress-
 ***
