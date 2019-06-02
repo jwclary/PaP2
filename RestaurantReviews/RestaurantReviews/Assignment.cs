@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.IO;
 using MySql.Data.MySqlClient;
 using System.Threading;
+using System.Timers;
 
 namespace RestaurantReviews
 {
@@ -21,29 +22,11 @@ namespace RestaurantReviews
 
         public Menu _menu;
         public List<RestaurantProfile> _profiles = new List<RestaurantProfile>();
+        public List<RestaurantReviews> _scores = new List<RestaurantReviews>();
 
         public Assignment()
         {
-           /*Directory.CreateDirectory(_directory);
-            if (!File.Exists(_file))
-            {
-                File.Create(_directory + _file).Dispose();
-            }
-            else
-            {
-
-            }*/
-
-            _menu = new Menu("Hello Admin, What Would You Like To Do Today?", 
-                               "Convert The Restaurant Reviews Database From SQL To JSON",
-                               "Showcase Our 5 Star Rating System",
-                               "Showcase Our Animated Bar Graph Review System",
-                               "Play A Card Game", 
-                               "Exit");
-            _menu.Display();
-            Selection();
-
-            Directory.CreateDirectory(_directory);
+           Directory.CreateDirectory(_directory);
             if (!File.Exists(_file))
             {
                 File.Create(_directory + _file).Dispose();
@@ -52,40 +35,7 @@ namespace RestaurantReviews
             {
 
             }
-        }
 
-        private void Selection()
-        {
-            int selection = Validation.ValidateInt("Make a selection");
-
-            switch (selection)
-            {
-                case 1:
-                    SQLtoJSON();
-                    break;
-                case 2:
-                    Console.Clear();
-                    RateSystem();
-                    break;
-                case 3:
-                    AnimatedBarGraph();
-                    break;
-                case 4:
-                    CardGame();
-                    break;
-                case 5:
-                    Exit();
-                    break;
-                default:
-                    Console.Clear();
-                    _menu.Display();
-                    Selection();
-                    break;
-            }
-        }
-
-        private void SQLtoJSON()
-        {
             //----------------SQL to Program----------------
             // Declare a MySQL Connection
             MySqlConnection conn = null;
@@ -159,7 +109,6 @@ namespace RestaurantReviews
                             profile = new RestaurantProfile(name, address, phone, hop, price, city, cuisine,
                                                                           fRating, sRating, aRating, vRating, oRating);
                         }
-
                         _profiles.Add(profile);
                     }
                     rdr.Close();
@@ -175,7 +124,51 @@ namespace RestaurantReviews
                         conn.Close();
                     }
                 }
-            }               
+            }
+
+            _menu = new Menu("Hello Admin, What Would You Like To Do Today?", 
+                               "Convert The Restaurant Reviews Database From SQL To JSON",
+                               "Showcase Our 5 Star Rating System",
+                               "Showcase Our Animated Bar Graph Review System",
+                               "Play A Card Game", 
+                               "Exit");
+            _menu.Display();
+            Selection();
+        }
+
+        private void Selection()
+        {
+            int selection = Validation.ValidateInt("Make a selection");
+
+            switch (selection)
+            {
+                case 1:
+                    SQLtoJSON();
+                    break;
+                case 2:
+                    Console.Clear();
+                    RateSystem();
+                    break;
+                case 3:
+                    Console.Clear();
+                    AnimatedBarGraph();
+                    break;
+                case 4:
+                    CardGame();
+                    break;
+                case 5:
+                    Exit();
+                    break;
+                default:
+                    Console.Clear();
+                    _menu.Display();
+                    Selection();
+                    break;
+            }
+        }
+
+        private void SQLtoJSON()
+        {   
             //----------------Program to JSON----------------
             int index = 0;
             Console.Clear();
@@ -260,10 +253,10 @@ namespace RestaurantReviews
             else
             {
                 _menu = new Menu("Hello Admin, How would you like to sort the data:",
-                             "List Restaurants Alphabetically (Show Rating Next To Name)",
-                             "List Restaurants in Reverse Alphabetical (Show Rating Next To Name)",
-                             "Sort Restaurants From Best/Most Stars to Worst (Show Rating Next To Name)",
-                             "Sort Restaurants From Worst/Least Stars to Best (Show Rating Next To Name)",
+                             "List Restaurants Alphabetically",
+                             "List Restaurants in Reverse Alphabetical",
+                             "Sort Restaurants From Best/Most Stars to Worst",
+                             "Sort Restaurants From Worst/Least Stars to Best",
                              "Show Only X and Up",
                              "Exit");
 
@@ -573,17 +566,287 @@ namespace RestaurantReviews
 
         private void AnimatedBarGraph()
         {
+            //----------------SQL to Program----------------
+            // Declare a MySQL Connection
+            MySqlConnection conn = null;
+            string stm;
+            MySqlDataReader rdr;
+            MySqlCommand cmd;
 
+            if (_scores.Count == 0)
+            {
+                try
+                {
+                    // Open a connection to MySQL
+                    conn = new MySqlConnection(cs);
+                    conn.Open();
+
+                    // Form SQL Statement
+                    stm = "SELECT RestaurantName, AVG(ReviewScore) AS ReviewScore " +
+                          "FROM restaurantreviews " +
+                          "JOIN restaurantProfiles ON restaurantprofiles.id = restaurantreviews.RestaurantId " +
+                          "GROUP BY RestaurantName;";
+
+                    // Prepare SQL Statement
+                    cmd = new MySqlCommand(stm, conn);
+
+                    // Execute SQL Statement and Convert Results to a String
+                    rdr = cmd.ExecuteReader();
+
+                    // Output Results
+                    while (rdr.Read())
+                    {
+                        string name;
+                        int reviewScore;
+
+                        RestaurantReviews review;
+                        try
+                        {
+                            name = rdr["RestaurantName"].ToString();
+                            reviewScore = Convert.ToInt32(rdr["ReviewScore"]);
+                            review = new RestaurantReviews(name, reviewScore);
+                        }
+                        catch
+                        {
+                            name = rdr["RestaurantName"].ToString();
+                            review = new RestaurantReviews(name, 0);
+                        }
+                        _scores.Add(review);
+                    }
+                    rdr.Close();
+                }
+                catch (MySqlException ex)
+                {
+                Console.WriteLine("Error: {0}", ex.ToString());
+                }
+                finally
+                {
+                if (conn != null)
+                {
+                    conn.Close();
+                }
+                }
+            }
+
+            _menu = new Menu("How would you like to sort the data:",
+                             "Show Average of Reviews for Restaurants",
+                             "Dinner Spinner (Selects Random Restaurant)",
+                             "Top 10 Restaurants",
+                             "Back To Main Menu");
+            _menu.Display();
+            BarGraphSelect();
         }
 
-        private void CardGame()
+        public System.Timers.Timer myAnimationTimer;
+        public int myTimerCounter = 0;
+        int score;
+        private void BarGraphSelect()
+        {
+            int selection = Validation.ValidateInt("Make a selection");
+
+            switch (selection)
+            {
+                case 1:
+                    Console.Clear();
+                    
+                    Console.WriteLine($"\tRestaurants Review Score");
+                    Console.WriteLine("==========================================================");
+
+                    foreach (RestaurantReviews item in _scores)
+                    {
+                        myTimerCounter = 50;
+                        score = item._reviewScore;
+                        Console.WriteLine($"{item._name}: {score}");
+                        //--------------------------------
+                        SetTimer();
+                        Console.CursorVisible = false;
+                        Thread.Sleep(150);
+                        Console.WriteLine();
+                        //--------------------------------
+                        Console.WriteLine("----------------------------------------------------------");
+                    }
+                    Console.Write("\nPress 'return' key to return to menu.");
+                    Console.ReadKey();
+                    Console.Clear();
+                    _menu.Display();
+                    BarGraphSelect();
+                    break;
+                case 2:
+                    Console.Clear();                    
+                    Console.WriteLine($"\tRestaurant Review Score(Random)");
+                    Console.WriteLine("==========================================================");
+                    Random rnd = new Random();
+                    int rndNum = rnd.Next(0, 100);
+
+                    for (int i = 0; i < 1; i++)
+                    {
+                        myTimerCounter = 1;
+                        score = _scores[rndNum]._reviewScore;
+                        Console.WriteLine($"{_scores[rndNum]._name}: {score}");
+                        //--------------------------------
+                        SetTimer();
+                        Console.CursorVisible = false;
+                        Thread.Sleep(3500);
+                        Console.WriteLine();
+                        //--------------------------------
+                        Console.WriteLine("----------------------------------------------------------");
+                    }
+                    Console.Write("\nPress 'return' key to return to menu.");
+                    Console.ReadKey();
+                    Console.Clear();
+                    _menu.Display();
+                    BarGraphSelect();
+                    break;
+                case 3:
+                    Console.Clear();
+                    
+                    Console.WriteLine($"\tRestaurants Review Score(Top 10)");
+                    Console.WriteLine("==========================================================");
+
+                    List<RestaurantReviews> temp = _scores.OrderBy(_scores => _scores._reviewScore).ToList();
+                    temp.Reverse();
+                    for (int i = 0; i < 10; i++)
+                    {
+                        myTimerCounter = 25;
+                        score = temp[i]._reviewScore;
+                        Console.WriteLine($"{temp[i]._name}: {score}");
+                        //--------------------------------
+                        SetTimer();
+                        Console.CursorVisible = false;
+                        Thread.Sleep(2000);
+                        Console.WriteLine();
+                        //--------------------------------
+                        Console.WriteLine("----------------------------------------------------------");
+                    }
+                    Console.Write("\nPress 'return' key to return to menu.");
+                    Console.ReadKey();
+                    Console.Clear();
+                    _menu.Display();
+                    BarGraphSelect();
+                    break;
+                case 4:
+                    Console.Clear();
+                    _menu = new Menu("Hello Admin, What Would You Like To Do Today?",
+                                     "Convert The Restaurant Reviews Database From SQL To JSON",
+                                     "Showcase Our 5 Star Rating System",
+                                     "Showcase Our Animated Bar Graph Review System",
+                                     "Play A Card Game",
+                                     "Exit");
+                    _menu.Display();
+                    Selection();
+                    break;
+                default:
+                    Console.Clear();
+                    _menu.Display();
+                    BarGraphSelect();
+                    break;
+            }
+        }
+
+        private void SetTimer()
+        {
+            myAnimationTimer = new System.Timers.Timer(50);
+            myAnimationTimer.Elapsed += OnTimedEvent;
+            myAnimationTimer.AutoReset = true;
+            myAnimationTimer.Enabled = true;
+        }
+
+        private void OnTimedEvent(Object source, ElapsedEventArgs e)
+        {
+            var myBackgroundColor = ConsoleColor.DarkGray;
+            var myBarGraphColor = ConsoleColor.Blue;
+
+            Random myRandomNumber = new Random();
+            var theRating = myRandomNumber.Next(0, 101);
+
+            if (myTimerCounter < 50)
+            {
+                myTimerCounter++;
+
+                if (theRating <= 30)
+                {
+                    myBarGraphColor = ConsoleColor.Red;
+                }
+                else if (theRating > 30 && theRating < 70)
+                {
+                    myBarGraphColor = ConsoleColor.Yellow;
+                }
+                else
+                {
+                    myBarGraphColor = ConsoleColor.Green;
+                }
+
+                Console.BackgroundColor = myBarGraphColor;
+                for (int ii = 0; ii <= theRating; ii++)
+                {
+                    Console.Write(" ");
+                }
+
+                int myTotalNumber = 100;
+                Console.BackgroundColor = myBackgroundColor;
+                for (int iii = theRating; iii <= myTotalNumber; iii++)
+                {
+                    Console.Write(" ");
+                }
+            }
+            else
+            {
+                Console.WriteLine("error");
+            }
+            
+            Console.CursorLeft = 0;
+            if (myTimerCounter == 50)
+            {
+                myAnimationTimer.Stop();
+                if (score <= 30)
+                {
+                    myBarGraphColor = ConsoleColor.Red;
+                }
+                else if (score > 30 && score < 70)
+                {
+                    myBarGraphColor = ConsoleColor.Yellow;
+                }
+                else
+                {
+                    myBarGraphColor = ConsoleColor.Green;
+                }
+
+                Console.BackgroundColor = myBarGraphColor;
+                for (int ii = 0; ii <= score; ii++)
+                {
+                    Console.Write(" ");
+                }
+
+                int myTotalNumber = 100;
+                Console.BackgroundColor = myBackgroundColor;
+                for (int iii = score; iii <= myTotalNumber; iii++)
+                {
+                    Console.Write(" ");
+                }
+                Console.BackgroundColor = ConsoleColor.Black;
+
+                Console.Write("");
+                Console.CursorVisible = false;
+            }       
+        }
+
+            private void CardGame()
         {
 
         }
 
         private void Exit()
         {
+            Console.ForegroundColor = ConsoleColor.Red;
 
+            Console.Write("\nExiting");
+            Thread.Sleep(500);
+            Console.Write(".");
+            Thread.Sleep(500);
+            Console.Write(".");
+            Thread.Sleep(500);
+            Console.Write(".");
+            Thread.Sleep(500);
         }
     }
 }
