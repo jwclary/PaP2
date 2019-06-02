@@ -8,5 +8,5 @@
 ### 3. Bar Graph Review System
 -Completed- Created animated bar graphs for the review scores in the restaurant reviews Database.
 ### 4. Card Game
--In Progress-
+-Completed- Card game created with SQl database viewers, also uploaded and created a JSON file to hold their scores.
 ***
