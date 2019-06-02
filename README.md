@@ -4,7 +4,7 @@
 ### 1. SQL to JSON
 -Completed- Converting the restaurant data from my sql database and inputing it into a JSON file through Visual Studio.
 ### 2. 5 Star Rating System
--In Progress-
+-Completed- Created a star rating system with the Restaurant info from the SQL Database.
 ### 3. Bar Graph Review System
 -In Progress-
 ### 4. Card Game
