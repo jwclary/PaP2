@@ -1,5 +1,5 @@
 # Project & Portfolio 2
-## Restaurant Reviews
+## Restaurant Reviews 2
 ***
 ### 1. SQL to JSON
 -Completed- Converting the restaurant data from my sql database and inputing it into a JSON file through Visual Studio.
