@@ -10,6 +10,7 @@ namespace RestaurantReviews2
     {
         static void Main(string[] args)
         {
+            Assignment work = new Assignment();
         }
     }
 }

@@ -13,8 +13,8 @@ namespace RestaurantReviews
     class Assignment
     {
         //Database Location
-        //string cs = @"server= 127.0.0.1;userid=root;password=root;database=RestaurantReviews_Database;port=8889";
-        string cs = @"server= 127.0.0.1;userid=root;password=root;database=RestaurantReviews_Database;port=3306";
+        //string cs = @"server= 127.0.0.1;userid=root;password=root;database=exampleDatabase;port=8889";
+        string cs = @"server= 127.0.0.1;userid=root;password=root;database=exampleDatabase;port=3306";
 
         //Output Location	
         private string _directory = @"..\..\output\";
