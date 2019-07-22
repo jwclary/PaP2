@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.IO;
 using MySql.Data.MySqlClient;
 using System.Threading;
@@ -19,7 +17,6 @@ namespace RestaurantReviews2
         //Output Location	
         private string _directory = @"..\..\output\";
         private string _file = @"info.json";
-        private string _gameFile = @"gameScores.json";
 
         public Menu _menu;
         public List<RestaurantProfile> _profiles = new List<RestaurantProfile>();
@@ -143,6 +140,10 @@ namespace RestaurantReviews2
                 case 1:
                     SQLtoJSON();
                     break;
+                case 2:
+                    Console.Clear();
+                    RateSystem();
+                    break;
                 case 5:
                     Exit();
                     break;
@@ -154,6 +155,7 @@ namespace RestaurantReviews2
             }
         }
 
+        // Converts restaurant data from a database to a JSOn file
         private void SQLtoJSON()
         {
             //----------------Program to JSON----------------
@@ -221,6 +223,334 @@ namespace RestaurantReviews2
                 Console.Clear();
                 _menu.Display();
                 Selection();
+            }
+        }
+
+        // Shows a star rating for restaurant reviews with different filters
+        private void RateSystem()
+        {
+            if (_profiles.Count == 0)
+            {
+                Console.Clear();
+                string text = @"Select the 'Convert SQL Database to JSON' option first. Press 'return' key to return to menu.";
+                Console.SetCursorPosition(Console.WindowWidth / 2 - text.Length / 2, Console.WindowHeight / 2);
+                Console.Write(text);
+                Console.ReadKey();
+
+                _menu.Display();
+                Selection();
+            }
+            else
+            {
+                _menu = new Menu("Hello Admin, How would you like to sort the data:",
+                             "List Restaurants Alphabetically",
+                             "List Restaurants in Reverse Alphabetical",
+                             "Sort Restaurants From Best/Most Stars to Worst",
+                             "Sort Restaurants From Worst/Least Stars to Best",
+                             "Show Only X and Up",
+                             "Exit");
+
+                _menu.Display();
+                RateSelection();
+            }
+        }
+
+        // Filters the Rate search and displays the restaurant star rating
+        private void RateSelection()
+        {
+            int selection = Validation.ValidateInt("Make a selection");
+
+            switch (selection)
+            {
+                case 1:
+                    Console.Clear();
+                    Console.WriteLine($"\tRestaurants Overall Reviews");
+                    Console.WriteLine("==========================================================");
+
+                    foreach (RestaurantProfile item in _profiles)
+                    {
+                        Console.Write($"{item._name,-50}");
+                        Console.WriteLine(RateDisplay(item._overallRate));
+                        Console.ForegroundColor = ConsoleColor.Gray;
+                        Console.WriteLine("----------------------------------------------------------");
+
+                    }
+
+                    Console.Write("\nPress 'return' key to return to menu.");
+                    Console.ReadKey();
+                    Console.Clear();
+                    _menu.Display();
+                    RateSelection();
+                    break;
+                case 2:
+                    Console.Clear();
+                    Console.WriteLine($"\tRestaurants Overall Reviews(Reverse)");
+                    Console.WriteLine("==========================================================");
+
+                    _profiles.Reverse();
+                    foreach (RestaurantProfile item in _profiles)
+                    {
+                        Console.Write($"{item._name,-50}");
+                        Console.WriteLine(RateDisplay(item._overallRate));
+                        Console.ForegroundColor = ConsoleColor.Gray;
+                        Console.WriteLine("----------------------------------------------------------");
+
+                    }
+
+                    Console.Write("\nPress 'return' key to return to menu.");
+                    Console.ReadKey();
+                    Console.Clear();
+                    _menu.Display();
+                    RateSelection();
+                    break;
+                case 3:
+                    Console.Clear();
+                    Console.WriteLine($"\tRestaurants Overall Reviews(Best to Worst)");
+                    Console.WriteLine("==========================================================");
+
+                    List<RestaurantProfile> temp = _profiles.OrderBy(_profiles => _profiles._overallRate).ToList();
+                    temp.Reverse();
+                    foreach (RestaurantProfile item in temp)
+                    {
+                        Console.Write($"{item._name,-50}");
+                        Console.WriteLine(RateDisplay(item._overallRate));
+                        Console.ForegroundColor = ConsoleColor.Gray;
+                        Console.WriteLine("----------------------------------------------------------");
+
+                    }
+
+                    Console.Write("\nPress 'return' key to return to menu.");
+                    Console.ReadKey();
+                    Console.Clear();
+                    _menu.Display();
+                    RateSelection();
+                    break;
+                case 4:
+                    Console.Clear();
+                    Console.WriteLine($"\tRestaurants Overall Reviews(Worst to Best)");
+                    Console.WriteLine("==========================================================");
+
+                    List<RestaurantProfile> temp2 = _profiles.OrderBy(_profiles => _profiles._overallRate).ToList();
+                    foreach (RestaurantProfile item in temp2)
+                    {
+                        Console.Write($"{item._name,-50}");
+                        Console.WriteLine(RateDisplay(item._overallRate));
+                        Console.ForegroundColor = ConsoleColor.Gray;
+                        Console.WriteLine("----------------------------------------------------------");
+
+                    }
+
+                    Console.Write("\nPress 'return' key to return to menu.");
+                    Console.ReadKey();
+                    Console.Clear();
+                    _menu.Display();
+                    RateSelection();
+                    break;
+                case 5:
+                    Console.Clear();
+                    _menu = new Menu("Show Only X and Up",
+                                     "Show the Best (5 Stars)",
+                                     "Show 4 Stars and Up",
+                                     "Show 3 Stars and Up",
+                                     "Show the Worst (1 Stars)",
+                                     "Show Unrated",
+                                     "Back");
+                    _menu.Display();
+                    StarSelect();
+                    break;
+                case 6:
+                    Console.Clear();
+                    _menu = new Menu("Hello Admin, What Would You Like To Do Today?",
+                              "Convert The Restaurant Reviews Database From SQL To JSON",
+                              "Showcase Our 5 Star Rating System",
+                              "Showcase Our Animated Bar Graph Review System",
+                              "Play A Card Game",
+                              "Exit");
+                    _menu.Display();
+                    Selection();
+                    break;
+                default:
+                    Console.Clear();
+                    _menu.Display();
+                    RateSelection();
+                    break;
+            }
+        }
+
+        // Displays the Star rating based on rating
+        private string RateDisplay(decimal stars)
+        {
+            if (stars >= 0.5m && stars < 1.5m)
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                return "*";
+            }
+            else if (stars >= 1.5m && stars < 2.5m)
+            {
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                return "**";
+            }
+            else if (stars >= 2.5m && stars < 3.5m)
+            {
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                return "***";
+            }
+            else if (stars >= 3.5m && stars < 4.5m)
+            {
+                Console.ForegroundColor = ConsoleColor.Green;
+                return "****";
+            }
+            else if (stars >= 4.5m)
+            {
+                Console.ForegroundColor = ConsoleColor.Green;
+                return "*****";
+            }
+            else
+            {
+                Console.ForegroundColor = ConsoleColor.White;
+                return "NO RATINGS";
+            }            
+        }
+
+        private void StarSelect()
+        {
+            int selection = Validation.ValidateInt("Make a selection");
+
+            switch (selection)
+            {
+                case 1:
+                    Console.Clear();
+                    Console.WriteLine($"\tRestaurants Overall Reviews");
+                    Console.WriteLine("==========================================================");
+
+                    foreach (RestaurantProfile item in _profiles)
+                    {
+                        if (item._overallRate > 4.4m)
+                        {
+                            Console.Write($"{item._name,-50}");
+                            Console.WriteLine(RateDisplay(item._overallRate));
+                            Console.ForegroundColor = ConsoleColor.Gray;
+                            Console.WriteLine("----------------------------------------------------------");
+                        }
+
+                    }
+
+                    Console.Write("\nPress 'return' key to return to menu.");
+                    Console.ReadKey();
+                    Console.Clear();
+                    _menu.Display();
+                    StarSelect();
+                    break;
+                case 2:
+                    Console.Clear();
+                    Console.WriteLine($"\tRestaurants Overall Reviews");
+                    Console.WriteLine("==========================================================");
+
+                    foreach (RestaurantProfile item in _profiles)
+                    {
+                        if (item._overallRate > 3.4m)
+                        {
+                            Console.Write($"{item._name,-50}");
+                            Console.WriteLine(RateDisplay(item._overallRate));
+                            Console.ForegroundColor = ConsoleColor.Gray;
+                            Console.WriteLine("----------------------------------------------------------");
+                        }
+
+                    }
+
+                    Console.Write("\nPress 'return' key to return to menu.");
+                    Console.ReadKey();
+                    Console.Clear();
+                    _menu.Display();
+                    StarSelect();
+                    break;
+                case 3:
+                    Console.Clear();
+                    Console.WriteLine($"\tRestaurants Overall Reviews");
+                    Console.WriteLine("==========================================================");
+
+                    foreach (RestaurantProfile item in _profiles)
+                    {
+                        if (item._overallRate > 2.4m)
+                        {
+                            Console.Write($"{item._name,-50}");
+                            Console.WriteLine(RateDisplay(item._overallRate));
+                            Console.ForegroundColor = ConsoleColor.Gray;
+                            Console.WriteLine("----------------------------------------------------------");
+                        }
+
+                    }
+
+                    Console.Write("\nPress 'return' key to return to menu.");
+                    Console.ReadKey();
+                    Console.Clear();
+                    _menu.Display();
+                    StarSelect();
+                    break;
+                case 4:
+                    Console.Clear();
+                    Console.WriteLine($"\tRestaurants Overall Reviews");
+                    Console.WriteLine("==========================================================");
+
+                    foreach (RestaurantProfile item in _profiles)
+                    {
+                        if (item._overallRate > 0.4m && item._overallRate < 1.5m)
+                        {
+                            Console.Write($"{item._name,-50}");
+                            Console.WriteLine(RateDisplay(item._overallRate));
+                            Console.ForegroundColor = ConsoleColor.Gray;
+                            Console.WriteLine("----------------------------------------------------------");
+                        }
+
+                    }
+
+                    Console.Write("\nPress 'return' key to return to menu.");
+                    Console.ReadKey();
+                    Console.Clear();
+                    _menu.Display();
+                    StarSelect();
+                    break;
+                case 5:
+                    Console.Clear();
+                    Console.WriteLine($"\tRestaurants Overall Reviews");
+                    Console.WriteLine("==========================================================");
+
+                    foreach (RestaurantProfile item in _profiles)
+                    {
+                        if (item._overallRate == 0)
+                        {
+                            Console.Write($"{item._name,-50}");
+                            Console.WriteLine(RateDisplay(item._overallRate));
+                            Console.ForegroundColor = ConsoleColor.Gray;
+                            Console.WriteLine("----------------------------------------------------------");
+                        }
+
+                    }
+
+                    Console.Write("\nPress 'return' key to return to menu.");
+                    Console.ReadKey();
+                    Console.Clear();
+                    _menu.Display();
+                    StarSelect();
+                    break;
+                case 6:
+                    Console.Clear();
+                    _menu = new Menu("Hello Admin, How would you like to sort the data:",
+                             "List Restaurants Alphabetically (Show Rating Next To Name)",
+                             "List Restaurants in Reverse Alphabetical (Show Rating Next To Name)",
+                             "Sort Restaurants From Best/Most Stars to Worst (Show Rating Next To Name)",
+                             "Sort Restaurants From Worst/Least Stars to Best (Show Rating Next To Name)",
+                             "Show Only X and Up",
+                             "Exit");
+
+                    _menu.Display();
+                    RateSelection();
+                    break;
+                default:
+                    Console.Clear();
+                    _menu.Display();
+                    StarSelect();
+                    break;
             }
         }
 
