@@ -10,3 +10,6 @@
 ### 4. Card Game
 -Completed- Card game created with SQl database viewers, also uploaded and created a JSON file to hold their scores.
 ***
+## Time Tracker App
+### 1. Menu System
+-In Progress- Navigates through the different options in App.
