@@ -6,108 +6,420 @@ using System.Threading.Tasks;
 using System.IO;
 using MySql.Data.MySqlClient;
 using System.Threading;
-using System.Timers;
 
 namespace JasonClary_TimeTrackerApp
 {
     class Assignment
     {
         //Database Location
-        string cs = @"server= 127.0.0.1;userid=root;password=root;database=exampleDatabase;port=8889";//Turn in conn
-        //string cs = @"server= 127.0.0.1;userid=root;password=root;database=exampleDatabase;port=3306";//Test conn
-
+#if false
+        string cs = @"server= 127.0.0.1;userid=root;password=root;database=JasonClary_MDV229_Database;port=8889";//Turn in conn
+#else
+        string cs = @"server= 127.0.0.1;userid=root;password=root;database=JasonClary_MDV229_Database;port=3306";//Test conn
+#endif
+        // Declare a MySQL Connection
+        MySqlConnection conn = null;
+        Task taskManager = new Task();
         public Menu _menu;
+        List<Task> TaskList = new List<Task>();
+        List<string> ActivityCategories = new List<string>();
+        List<string> ActivityDescriptions = new List<string>();
+        List<DateTime> ActivityDates = new List<DateTime>();
+        // Task variables
+        private int dayNum;
+        private DateTime calendarDate;
+        private string dayName;
+        private string categoryDescription;
+        private string activityDescription;
+        private double activityTime;
 
         public Assignment()
         {
-            //----------------SQL to Program----------------
-            // Declare a MySQL Connection
-            MySqlConnection conn = null;
-            string stm;
-            MySqlDataReader rdr;
-            MySqlCommand cmd;
+            //taskManager = new Task();
+            //_menu = new Menu("Login Menu", 
+            //                 "Login", 
+            //                 "Create New Account",
+            //                 "Exit");
+            //_menu.Display();
+            //LoginSelect();
 
-            if (_profiles.Count == 0)
+            
+            // Menu shown to the user
+            _menu = new Menu($"Hello {taskManager.FirstName} {taskManager.LastName}, What Would You Like To Do Today?",
+                               "Enter Activity",
+                               "View Tracked Data",
+                               "Run Calculations",                             
+                               "Exit");
+            _menu.Display();
+            Selection();
+        }
+
+        //private void LoginSelect()
+        //{
+        //    int selection = Validation.ValidateInt("Make a selection");
+
+        //    switch (selection)
+        //    {
+        //        case 1:
+        //            Console.Clear();
+        //            taskManager.UserId = (Validation.ValidateInt("What is your User Id?").ToString());
+        //            taskManager.Password = Validation.ValidateString("/nWhat is your Password?");
+        //            if (taskManager.LogIn() == false)
+        //            {
+        //                Console.Clear();
+        //                _menu.Display();
+        //                LoginSelect();
+        //            }
+        //            break;
+        //        case 2:
+        //            Console.Clear();
+        //            TrackedData();
+        //            break;
+        //        case 3:
+        //            Exit();
+        //            break;
+        //        default:
+        //            Console.Clear();
+        //            _menu.Display();
+        //            LoginSelect();
+        //            break;
+        //    }
+        //}
+
+        private void Selection()
+        {
+            int selection = Validation.ValidateInt("Make a selection");
+
+            switch (selection)
             {
-                try
-                {
-                    // Open a connection to MySQL
-                    conn = new MySqlConnection(cs);
-                    conn.Open();
+                case 1:
+                    Console.Clear();
+                    Activity();
+                    break;
+                case 2:
+                    Console.Clear();
+                    TrackedData();
+                    break;
+                case 3:
+                    Console.Clear();
+                    Calculations();
+                    break;
+                case 4:
+                    Exit();
+                    break;
+                default:
+                    Console.Clear();
+                    _menu.Display();
+                    Selection();
+                    break;
+            }
+        }
 
-                    // Form SQL Statement
-                    stm = "SELECT * " +
-                          "FROM restaurantprofiles;";
+        public void Activity()
+        {
+            ActivityCategories.Clear();
+            CategoryList();
 
-                    // Prepare SQL Statement
-                    cmd = new MySqlCommand(stm, conn);
+            // Array to hold the Category List
+            ActivityCategories.Add("Back");
+            string[] catArray = ActivityCategories.ToArray();
+            // Sub-Menu
+            _menu = new Menu("Pick A Category Of Activity:", catArray);
+            _menu.Display();
+            CategorySelect();
+        }
+        public void CategorySelect()
+        {
+            int selection = Validation.ValidateInt("Make a selection");
 
-                    // Execute SQL Statement and Convert Results to a String
-                    rdr = cmd.ExecuteReader();
+            switch (selection)
+            {
+                case 1: case 2: case 3: case 4: case 5: case 6: case 7: case 8: case 9: case 10: case 11: case 12: case 13:
+                case 14: case 15: case 16: case 17: case 18: case 19: case 20: case 21: case 22: case 23: case 24:
+                    categoryDescription = ActivityCategories[selection - 1];
 
-                    // Output Results
-                    while (rdr.Read())
+                    // New Sub-Menu
+                    Console.Clear();
+                    ActivityDescriptions.Clear();
+                    ActivityList();
+
+                    ActivityDescriptions.Add("Back");
+                    string[] actDescArray = ActivityDescriptions.ToArray();
+                    _menu = new Menu($"Pick an Activity Description",actDescArray);
+                    _menu.Display();
+                    ActivitySelect();
+                    break;
+                case 25:
+                    Console.Clear();
+                    _menu = new Menu($"Hello {taskManager.FirstName} {taskManager.LastName}, What Would You Like To Do Today?",
+                               "Enter Activity",
+                               "View Tracked Data",
+                               "Run Calculations",
+                               "Exit");
+                    _menu.Display();
+                    Selection();
+                    break;
+                default:
+                    Console.Clear();
+                    _menu.Display();
+                    CategorySelect();
+                    break;
+            }
+        }
+
+        private void ActivitySelect()
+        {
+            int selection = Validation.ValidateInt("Make a selection");
+
+            switch (selection)
+            {
+                case 1: case 2: case 3: case 4: case 5: case 6: case 7: case 8: case 9: case 10: case 11: case 12: case 13:
+                case 14: case 15: case 16: case 17: case 18: case 19: case 20: case 21: case 22: case 23: case 24:
+                    activityDescription = ActivityDescriptions[selection  -1];
+
+                    // New Sub-Menu
+                    Console.Clear();
+                    ActivityDates.Clear();
+                    DateList();
+
+                    List<string> tempDates = new List<string>();
+                    foreach (DateTime item in ActivityDates)
                     {
-                        string name;
-                        string address;
-                        string phone;
-                        string hop;
-                        string price;
-                        string city;
-                        string cuisine;
-                        decimal fRating;
-                        decimal sRating;
-                        decimal aRating;
-                        decimal vRating;
-                        decimal oRating;
-
-                        RestaurantProfile profile;
-                        if (!(decimal.TryParse(rdr["FoodRating"].ToString(), out fRating)))
-                        {
-                            name = rdr["RestaurantName"].ToString();
-                            address = rdr["Address"].ToString();
-                            phone = rdr["Phone"].ToString();
-                            hop = rdr["HoursOfOperation"].ToString();
-                            price = rdr["Price"].ToString();
-                            city = rdr["USACityLocation"].ToString();
-                            cuisine = rdr["Cuisine"].ToString();
-
-                            profile = new RestaurantProfile(name, address, phone, hop, price, city, cuisine,
-                                                            0, 0, 0, 0, 0);
-                        }
-                        else
-                        {
-                            name = rdr["RestaurantName"].ToString();
-                            address = rdr["Address"].ToString();
-                            phone = rdr["Phone"].ToString();
-                            hop = rdr["HoursOfOperation"].ToString();
-                            price = rdr["Price"].ToString();
-                            city = rdr["USACityLocation"].ToString();
-                            cuisine = rdr["Cuisine"].ToString();
-                            fRating = Convert.ToDecimal(rdr["FoodRating"]);
-                            sRating = decimal.Parse(rdr["ServiceRating"].ToString());
-                            aRating = decimal.Parse(rdr["AmbienceRating"].ToString());
-                            vRating = decimal.Parse(rdr["ValueRating"].ToString());
-                            oRating = decimal.Parse(rdr["OverallRating"].ToString());
-
-                            profile = new RestaurantProfile(name, address, phone, hop, price, city, cuisine,
-                                                                          fRating, sRating, aRating, vRating, oRating);
-                        }
-                        _profiles.Add(profile);
+                        tempDates.Add(item.ToShortDateString());
                     }
-                    rdr.Close();
-                }
-                catch (MySqlException ex)
-                {
-                    Console.WriteLine("Error: {0}", ex.ToString());
-                }
-                finally
-                {
-                    if (conn != null)
+                    tempDates.Add("Back");
+                    string[] dateArray = tempDates.ToArray();
+                    
+                    _menu = new Menu($"What Date Did You Perform Activity?", dateArray);
+                    _menu.Display();
+                    DateSelect();
+                    break;
+                case 25:
+                    Console.Clear();
+                    string[] catArray = ActivityCategories.ToArray();
+                    // Sub-Menu
+                    _menu = new Menu("Pick A Category Of Activity:", catArray);
+                    _menu.Display();
+                    CategorySelect();
+                    break;
+                default:
+                    Console.Clear();
+                    _menu.Display();
+                    ActivitySelect();
+                    break;
+            }
+        }
+
+        private void DateSelect()
+        {
+            int selection = Validation.ValidateInt("Make a selection");
+
+            switch (selection)
+            {
+                case 1: case 2: case 3: case 4: case 5: case 6: case 7: case 8: case 9: case 10: case 11: case 12: case 13:
+                case 14: case 15: case 16: case 17: case 18: case 19: case 20: case 21: case 22: case 23: case 24: case 25: case 26:
+                    calendarDate = ActivityDates[selection - 1];
+
+                    // New Sub-Menu
+                    Console.Clear();
+                    _menu = new Menu("Would You Like To Select Time Of Activity Or Go Back?", "Selection Time", "Back");
+                    _menu.Display();
+                    TimeSelect();
+                    break;
+                case 27:
+                    Console.Clear();
+                    string[] actDescArray = ActivityDescriptions.ToArray();
+                    _menu = new Menu($"Pick an Activity Description", actDescArray);
+                    _menu.Display();
+                    ActivitySelect();
+                    break;
+                default:
+                    Console.Clear();
+                    _menu.Display();
+                    DateSelect();
+                    break;
+            }
+        }
+
+        private void TimeSelect()
+        {
+            int selection = Validation.ValidateInt("Make a selection");
+
+            switch (selection)
+            {
+                case 1:
+                    Console.Clear();
+                    double time = Validation.ValidateDouble("How Long Did You Perform That Activity? " +
+                                "\n(Keep in mind every 15 minutes is represented as a 0.25): (Format: 0.00) Between .25 and 24 hours",
+                                (double)0.25, (double)24.00);
+                    activityTime = Math.Round(time * 4, MidpointRounding.ToEven) / 4;   
+
+                    // Final Menu
+                    Console.Clear();
+                    dayNum = (int.Parse(calendarDate.ToString("dd")) - 7);
+                    dayName = calendarDate.ToString("dddd");
+                    Task newTask = new Task(dayNum, calendarDate, dayName, categoryDescription, activityDescription, activityTime);
+                    TaskList.Add(newTask);
+
+                    Console.WriteLine($"Day Number: {dayNum, -24}\n" +
+                                      $"Calendar Date: {calendarDate.ToShortDateString(), -24}\n" +
+                                      $"Day Of Week; {dayName, -24}\n" +
+                                      $"Category: {categoryDescription, -24}\n" +
+                                      $"Activity: {activityDescription, -24}\n" +
+                                      $"Time: {activityTime, -24}\n" +
+                                      $"-----------------------------");
+                    _menu = new Menu("Activity Entered!", "Enter Another Activity", "Back To Main Menu");
+                    _menu.Display();
+                    LastSelect();
+                    break;;
+                case 2:
+                    Console.Clear();
+                    List<string> tempDates = new List<string>();
+                    foreach (DateTime item in ActivityDates)
                     {
-                        conn.Close();
+                        tempDates.Add(item.ToShortDateString());
                     }
-                }
-            }       
+                    tempDates.Add("Back");
+                    string[] dateArray = tempDates.ToArray();
+
+                    _menu = new Menu($"What Date Did You Perform Activity?", dateArray);
+                    _menu.Display();
+                    DateSelect();
+                    break;
+                default:
+                    Console.Clear();
+                    _menu.Display();
+                    TimeSelect();
+                    break;
+            }
+        }
+
+        private void LastSelect()
+        {
+            int selection = Validation.ValidateInt("Make a selection");
+
+            switch (selection)
+            {
+                case 1:
+                    Console.Clear();
+                    Activity();
+                    break;
+                case 2:
+                    Console.Clear();
+                    _menu = new Menu($"Hello {taskManager.FirstName} {taskManager.LastName}, What Would You Like To Do Today?",
+                              "Enter Activity",
+                              "View Tracked Data",
+                              "Run Calculations",
+                              "Exit");
+                    _menu.Display();
+                    Selection();
+                    break;
+                default:
+                    Console.Clear();
+                    _menu.Display();
+                    LastSelect();
+                    break;
+            }
+        }
+
+        public void TrackedData()
+        {
+
+        }
+
+        public void Calculations()
+        {
+
+        }
+
+        private void Exit()
+        {
+            Console.ForegroundColor = ConsoleColor.Red;
+
+            Console.Write("\nExiting");
+            Thread.Sleep(500);
+            Console.Write(".");
+            Thread.Sleep(500);
+            Console.Write(".");
+            Thread.Sleep(500);
+            Console.Write(".");
+            Thread.Sleep(500);
+        }
+
+        public void ActivityList()
+        {
+            // Open a connection to MySQL
+            conn = new MySqlConnection(cs);
+            conn.Open();
+
+            // Open a connection to MySQL
+            conn = new MySqlConnection(cs);
+            conn.Open();
+
+            // Form SQL Statement
+            string stm = "SELECT activity_description " +
+                         "FROM activity_descriptions;";
+
+            // Prepare SQL Statement
+            MySqlCommand cmd = new MySqlCommand(stm, conn);
+
+            // Execute SQL Statement and Convert Results to a String
+            MySqlDataReader rdr = cmd.ExecuteReader();
+
+            // Output Results
+            while (rdr.Read())
+            {
+                ActivityDescriptions.Add(rdr["activity_description"].ToString());
+            }
+            rdr.Close();
+        }
+
+        public void CategoryList()
+        {
+            // Open a connection to MySQL
+            conn = new MySqlConnection(cs);
+            conn.Open();
+
+            // Form SQL Statement
+            string stm = "SELECT category_description " +
+                         "FROM activity_categories;";
+
+            // Prepare SQL Statement
+            MySqlCommand cmd = new MySqlCommand(stm, conn);
+
+            // Execute SQL Statement and Convert Results to a String
+            MySqlDataReader rdr = cmd.ExecuteReader();
+
+            // Output Results
+            while (rdr.Read())
+            {
+                ActivityCategories.Add(rdr["category_description"].ToString());
+            }
+            rdr.Close();
+        }
+
+        public void DateList()
+        {
+            // Open a connection to MySQL
+            conn = new MySqlConnection(cs);
+            conn.Open();
+
+            // Form SQL Statement
+            string stm = "SELECT calendar_date " +
+                         "FROM tracked_calendar_dates;";
+
+            // Prepare SQL Statement
+            MySqlCommand cmd = new MySqlCommand(stm, conn);
+
+            // Execute SQL Statement and Convert Results to a String
+            MySqlDataReader rdr = cmd.ExecuteReader();
+
+            // Output Results
+            while (rdr.Read())
+            {
+                ActivityDates.Add(DateTime.Parse(rdr["calendar_date"].ToString()));
+            }
+            rdr.Close();
+        }
     }
 }

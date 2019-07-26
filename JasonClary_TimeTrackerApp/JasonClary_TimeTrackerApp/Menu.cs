@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+
 namespace JasonClary_TimeTrackerApp
 {
     class Menu
@@ -27,7 +28,7 @@ namespace JasonClary_TimeTrackerApp
         }
         public void Display()
         {
-            Console.Clear();
+            //Console.Clear();
             Console.ForegroundColor = ConsoleColor.Cyan;
             Console.WriteLine(Title);
             Console.ForegroundColor = ConsoleColor.Gray;
