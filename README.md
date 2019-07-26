@@ -12,4 +12,4 @@
 ***
 ## Time Tracker App
 ### 1. Menu System
--In Progress- Navigates through the different options in App.
+-Completed- Navigates through the different options in App.
