@@ -1,9 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.IO;
 using MySql.Data.MySqlClient;
 using System.Threading;
 
@@ -90,6 +86,7 @@ namespace JasonClary_NotedApp
                         }
                         Console.Clear();
                         ViewNote(Notes[input - 1]);
+                        Console.BackgroundColor = ConsoleColor.Black;
                         menu = new Menu("MENU", "Change Note", "Go Back");
                         menu.Display();
                         ViewSelect(Notes[input - 1]);
@@ -268,7 +265,7 @@ namespace JasonClary_NotedApp
                     if (title.Length > 45 || string.IsNullOrWhiteSpace(title))
                     {
                         Console.Clear();
-                        title = Validation.ValidateString("Please type in your note. LIMIT: 45 characters");
+                        title = Validation.ValidateString("Please type in your note title. LIMIT: 45 characters");
                     }
                     note._noteTitle = title;
 
@@ -403,7 +400,7 @@ namespace JasonClary_NotedApp
             if (title.Length > 45 || string.IsNullOrWhiteSpace(title))
             {
                 Console.Clear();
-                title = Validation.ValidateString("Please type in your note. LIMIT: 45 characters");
+                title = Validation.ValidateString("Please type in your note title. LIMIT: 45 characters");
             }
             noteTitle = title;
 
@@ -423,11 +420,10 @@ namespace JasonClary_NotedApp
 
             // Menu shown to the user
             menu = new Menu("MENU",
-                               "Sort By",
-                               "Order",
-                               "Trash",
+                               "View Note",
                                "New Note",
                                "Delete Note",
+                               "Trash Bin",
                                "Exit");
             menu.Display();
             Selection();
@@ -441,8 +437,8 @@ namespace JasonClary_NotedApp
                 input = Validation.ValidateInt("\nWhich note would you like to delete?");
             }
             // Delete from database
-            DeleteFromNotesDB(conn, Notes[input - 1]);
             AddToTrashDB(conn, Notes[input - 1]);
+            DeleteFromNotesDB(conn, Notes[input - 1]);   
 
             // Removes from notes and adds to the trash list
             Trash.Add(Notes[input - 1]);
@@ -456,11 +452,10 @@ namespace JasonClary_NotedApp
 
             // Menu shown to the user
             menu = new Menu("MENU",
-                               "Sort By",
-                               "Order",
-                               "Trash",
+                               "View Note",
                                "New Note",
                                "Delete Note",
+                               "Trash Bin",
                                "Exit");
             menu.Display();
             Selection();
@@ -487,8 +482,9 @@ namespace JasonClary_NotedApp
                     }
                     Console.Clear();
                     ViewNote(Trash[input - 1]);
-
+                    Console.BackgroundColor = ConsoleColor.Black;
                     menu = new Menu("MENU", "Add to notes", "Go back");
+                    menu.Display();
                     int choice = Validation.ValidateInt("Make a selection");
                     switch (choice)
                     {
@@ -496,8 +492,12 @@ namespace JasonClary_NotedApp
                             Console.BackgroundColor = ConsoleColor.Black;
                             Console.ForegroundColor = ConsoleColor.Gray;
 
+                            AddToNotesDB(conn, Trash[input - 1]);
+                            DeleteFromTrashDB(conn, Trash[input - 1]);
+
                             Notes.Add(Trash[input - 1]);
                             Trash.Remove(Trash[input - 1]);
+
                             Console.Clear();
                             DisplayTrash();
                             menu = new Menu("MENU", "View Note", "Delete All", "Go Back");
@@ -524,6 +524,20 @@ namespace JasonClary_NotedApp
                     conn.Open();
 
                     DeleteFromTrashDB(conn);
+
+                    Console.Clear();
+                    //Display Existing notes
+                    DisplayNotes();
+
+                    // Menu shown to the user
+                    menu = new Menu("MENU",
+                                       "View Note",
+                                       "New Note",
+                                       "Delete Note",
+                                       "Trash Bin",
+                                       "Exit");
+                    menu.Display();
+                    Selection();
                     break;
                 case 3:
                     Console.Clear();
@@ -641,7 +655,9 @@ namespace JasonClary_NotedApp
             string stm = "SELECT id, priority, color, noteChanged, noteDate, noteReminder, noteText, noteTitle " +
                          "FROM notes " +
                          "JOIN priority ON notes.priority_id = priority.priority_id " +
-                         "JOIN backgroundcolor ON notes.backgroundColor_id = backgroundcolor.backgroundColor_id;";
+                         "JOIN backgroundcolor ON notes.backgroundColor_id = backgroundcolor.backgroundColor_id " +
+                         "ORDER BY id ASC " +
+                         "LIMIT 5;";
 
             // Prepare SQL Statement
             MySqlCommand cmd = new MySqlCommand(stm, conn);
@@ -703,7 +719,9 @@ namespace JasonClary_NotedApp
             string stm = "SELECT note_id, priority, color, noteChanged, noteDate, noteReminder, noteText, noteTitle " +
                          "FROM trash " +
                          "JOIN priority ON trash.priority_id = priority.priority_id " +
-                         "JOIN backgroundcolor ON trash.backgroundColor_id = backgroundcolor.backgroundColor_id;";
+                         "JOIN backgroundcolor ON trash.backgroundColor_id = backgroundcolor.backgroundColor_id " +
+                         "ORDER BY note_id ASC " +
+                         "LIMIT 5;";
 
             // Prepare SQL Statement
             MySqlCommand cmd = new MySqlCommand(stm, conn);
@@ -755,9 +773,25 @@ namespace JasonClary_NotedApp
                                              "noteReminder, noteText, noteTitle) " +
                          "VALUES (@nId, @uId, @pId, @cId, @nChange, @nDate, @nRemind, @nText, @nTitle);";
 
+            string stm2 = "SELECT id " +
+                          "FROM notes " +
+                          "ORDER BY id DESC " +
+                          "LIMIT 1;";
+
+            MySqlCommand cmd2 = new MySqlCommand(stm2, conn);
             MySqlCommand cmd = new MySqlCommand(stm, conn);
-            cmd.Parameters.AddWithValue("@nId", Note.UserId);
-            cmd.Parameters.AddWithValue("@uId", note._noteId);
+            // Execute SQL Statement and Convert Results to a String
+            MySqlDataReader rdr2 = cmd2.ExecuteReader();
+
+            // Output Results
+            while (rdr2.Read())
+            {
+                note._noteId = int.Parse(rdr2["id"].ToString());
+            }
+            rdr2.Close();
+
+            cmd.Parameters.AddWithValue("@nId", note._noteId + 1);
+            cmd.Parameters.AddWithValue("@uId", 1);
             cmd.Parameters.AddWithValue("@pId", Note.PriorityId(note._priority));
             cmd.Parameters.AddWithValue("@cId", Note.BackgroundId(note._backgroundColor));
             cmd.Parameters.AddWithValue("@nChange", note._noteChanged);
@@ -772,9 +806,6 @@ namespace JasonClary_NotedApp
 
         public void DeleteFromNotesDB(MySqlConnection conn, Note note)
         {
-            // Open connection
-            conn.Open();
-
             string stm = "DELETE FROM notes " +
                          "WHERE id = @nId;";
 
@@ -787,16 +818,14 @@ namespace JasonClary_NotedApp
 
         public void AddToTrashDB(MySqlConnection conn, Note note)
         {
-            // Open connection
-            conn.Open();
-
             string stm = "INSERT INTO trash (note_id, user_id, priority_id, backgroundColor_id, noteChanged, noteDate, " +
                                              "noteReminder, noteText, noteTitle) " +
                          "VALUES (@nId, @uId, @pId, @cId, @nChange, @nDate, @nRemind, @nText, @nTitle);";
 
             MySqlCommand cmd = new MySqlCommand(stm, conn);
+
             cmd.Parameters.AddWithValue("@nId", note._noteId);
-            cmd.Parameters.AddWithValue("@uId", Note.UserId);
+            cmd.Parameters.AddWithValue("@uId", 1);
             cmd.Parameters.AddWithValue("@pId", Note.PriorityId(note._priority));
             cmd.Parameters.AddWithValue("@cId", Note.BackgroundId(note._backgroundColor));
             cmd.Parameters.AddWithValue("@nChange", note._noteChanged);
@@ -811,14 +840,23 @@ namespace JasonClary_NotedApp
 
         public void DeleteFromTrashDB(MySqlConnection conn)
         {
-            // Open connection
-            conn.Open();
-
             string stm = "DELETE FROM trash " +
                          "WHERE user_id = @uId;";
 
             MySqlCommand cmd = new MySqlCommand(stm, conn);
-            cmd.Parameters.AddWithValue("@uId", Note.UserId);
+            cmd.Parameters.AddWithValue("@uId", 1);
+
+            MySqlDataReader rdr = cmd.ExecuteReader();
+            rdr.Close();
+        }
+
+        public void DeleteFromTrashDB(MySqlConnection conn, Note note)
+        {
+            string stm = "DELETE FROM trash " +
+                         "WHERE note_id = @nId;";
+
+            MySqlCommand cmd = new MySqlCommand(stm, conn);
+            cmd.Parameters.AddWithValue("@nId", note._noteId);
 
             MySqlDataReader rdr = cmd.ExecuteReader();
             rdr.Close();
@@ -911,7 +949,7 @@ namespace JasonClary_NotedApp
                     break;
                 case "Green":
                     Console.BackgroundColor = ConsoleColor.Green;
-                    Console.ForegroundColor = ConsoleColor.White;
+                    Console.ForegroundColor = ConsoleColor.Black;
                     break;
                 case "Magenta":
                     Console.BackgroundColor = ConsoleColor.Magenta;
@@ -951,17 +989,17 @@ namespace JasonClary_NotedApp
             else if (note._noteDate == note._noteChanged)
             {
                 Console.WriteLine($"{$"Priority: {note._priority}",-20}{$"NoteDate: {note._noteDate.ToShortDateString()}",-20}" +
-                                  $"{$"NoteReminder: {note._noteReminder}",-20}");
+                                  $"{$"NoteReminder: {note._noteReminder}",-21}");
             }
             else if (note._noteDate == note._noteReminder)
             {
                 Console.WriteLine($"{$"Priority: {note._priority}",-20}{$"NoteDate: {note._noteDate.ToShortDateString()}",-20}" +
-                                  $"{$"NoteChanged: {note._noteChanged}",-20}");
+                                  $"{$"NoteChanged: {note._noteChanged}",-21}");
             }
             else
             {
                 Console.WriteLine($"{$"Priority: {note._priority}",-20}{$"NoteDate: {note._noteDate.ToShortDateString()}",-20}" +
-                                  $"{$"NoteChanged: {note._noteChanged}",-20}{$"Notereminder: {note._noteReminder}",-20}");
+                                  $"{$"NoteChanged: {note._noteChanged}",-36}{$"NoteReminder: {note._noteReminder}",-21}");
             }
         }
 
