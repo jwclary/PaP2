@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace RestaurantReviews
+namespace RestaurantReviews2
 {
     class CardGame
     {
@@ -54,7 +54,7 @@ namespace RestaurantReviews
             if (player.CardsInHand < 13)
             {
                 player.CardsInHand++;
-            } 
+            }
             player.points += nextCard.Points;
             pointer++;
 

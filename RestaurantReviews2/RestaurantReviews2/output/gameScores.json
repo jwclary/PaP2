@@ -1,0 +1,30 @@
+[
+{
+"name": "Kelly Chapman",
+"pointsPerGame": "97",
+"pointsTotal": "97",
+"cardHands": "K C ,4 H ,6 S ,2 C ,Q S ,A S ,6 C ,9 H ,8 D ,2 D ,2 S ,9 C ,10 C ",
+"totalGames": "1"
+},
+{
+"name": "Alice Robertson",
+"pointsPerGame": "81",
+"pointsTotal": "81",
+"cardHands": "8 H ,7 D ,8 C ,6 D ,2 H ,5 H ,5 S ,K D ,4 C ,3 D ,J H ,5 D ,4 D ",
+"totalGames": "1"
+},
+{
+"name": "Sara Simpson",
+"pointsPerGame": "141",
+"pointsTotal": "141",
+"cardHands": "7 C ,K H ,10 D ,10 S ,J S ,3 S ,A H ,6 H ,J C ,A C ,Q C ,Q H ,A D ",
+"totalGames": "1"
+},
+{
+"name": "Janice Booth",
+"pointsPerGame": "101",
+"pointsTotal": "101",
+"cardHands": "9 S ,J D ,3 C ,7 S ,8 S ,9 D ,Q D ,10 H ,7 H ,5 C ,3 H ,4 S ,K S ",
+"totalGames": "1"
+},
+]

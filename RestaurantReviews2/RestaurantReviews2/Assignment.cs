@@ -21,10 +21,12 @@ namespace RestaurantReviews2
         //Output Location	
         private string _directory = @"..\..\output\";
         private string _file = @"info.json";
+        private string _gameFile = @"gameScores.json";
 
         public Menu _menu;
         public List<RestaurantProfile> _profiles = new List<RestaurantProfile>();
         public List<RestaurantReviews> _scores = new List<RestaurantReviews>();
+        public List<CardGame> _players = new List<CardGame>();
 
         public Assignment()
         {
@@ -32,6 +34,10 @@ namespace RestaurantReviews2
             if (!File.Exists(_file))
             {
                 File.Create(_directory + _file).Dispose();
+            }
+            if (!File.Exists(_gameFile))
+            {
+                File.Create(_directory + _gameFile).Dispose();
             }
 
 
@@ -152,6 +158,10 @@ namespace RestaurantReviews2
                 case 3:
                     Console.Clear();
                     AnimatedBarGraph();
+                    break;
+                case 4:
+                    Console.Clear();
+                    ViewerGame();
                     break;
                 case 5:
                     Exit();
@@ -829,6 +839,209 @@ namespace RestaurantReviews2
 
                 Console.Write("");
                 Console.CursorVisible = false;
+            }
+        }
+
+        private void ViewerGame()
+        {
+            //----------------SQL to Program----------------
+            // Declare a MySQL Connection
+            MySqlConnection conn = null;
+            string stm;
+            MySqlDataReader rdr;
+            MySqlCommand cmd;
+
+            if (_scores.Count == 0)
+            {
+                try
+                {
+                    // Open a connection to MySQL
+                    conn = new MySqlConnection(cs);
+                    conn.Open();
+
+                    // Form SQL Statement
+                    stm = "SELECT CONCAT(FIRST,' ',LAST) AS Name " +
+                          "FROM restaurantreviewers;";
+
+                    // Prepare SQL Statement
+                    cmd = new MySqlCommand(stm, conn);
+
+                    // Execute SQL Statement and Convert Results to a String
+                    rdr = cmd.ExecuteReader();
+
+                    // Output Results
+                    while (rdr.Read())
+                    {
+                        CardGame player;
+                        player = new CardGame();
+                        player.Name = rdr["Name"].ToString();
+                        _players.Add(player);
+                    }
+                    rdr.Close();
+                }
+                catch (MySqlException ex)
+                {
+                    Console.WriteLine("Error: {0}", ex.ToString());
+                }
+                finally
+                {
+                    if (conn != null)
+                    {
+                        conn.Close();
+                    }
+                }
+            }
+
+            Random rnd = new Random();
+            Card[] deck = CardGame.CreateDeck();
+            CardGame[] players = new CardGame[4];
+            CardGame.Shuffle(ref deck);
+            int turnCounter = 0;
+
+            for (int i = 0; i < players.Length; i++)
+            {
+                int rndNum = rnd.Next(0, 100);
+                players[i] = _players[rndNum];
+            }
+
+            for (int i = 0; i < 13; i++)
+            {
+                Console.Clear();
+                turnCounter++;
+
+                for (int ii = 0; ii < players.Length; ii++)
+                {
+                    CardGame.DrawCard(deck, ref players[ii]);
+                }
+                Console.WriteLine($"\tReviewers' Card Game(H = heart, C = clubs, D = diamonds, S = spades)   Turn: {turnCounter}");
+                Console.WriteLine("====================================================================================================================");
+                for (int ii = 0; ii < players.Length; ii++)
+                {
+                    Console.Write($"Score: {players[ii].points,-5}   Player {ii + 1} - {players[ii].Name,-20}");
+                    DisplayHand(players[ii]);
+                    Console.Write($"\n\n");
+                    if (i == 12)
+                    {
+                        int gamePoints = players[ii].points;
+                        players[ii].PointsPerGame.Add(gamePoints);
+                        players[ii].pointsTotal += players[ii].points;
+                        for (int j = 0; j < 13; j++)
+                        {
+                            players[ii].CardHands.Add(outputCardSymbol(players[ii].Hand[j]));
+                        }
+                        players[ii].totalGames++;
+                    }
+                }
+
+                int total = 0;
+                total = players[0].points + players[1].points + players[2].points + players[3].points;
+                if (i < 12)
+                {
+                    Console.Write($"\n\nScore Checker:  {total}  Press the Space Bar to draw a card...");
+                    Console.ReadKey();
+                    Console.Clear();
+                }
+                else
+                {
+                    Array.Sort(players, delegate (CardGame player1, CardGame player2)
+                    {
+                        return player1.points.CompareTo(player2.points);
+                    }
+                    );
+                    Console.Write($"\n\nScore Checker:  {total}  Congratulations! {players[3].Name} Won!");
+                    Console.Write($"\n\nPress Enter to return to menu...");
+                    Console.ReadKey();
+
+                    //----------------Program to JSON----------------
+                    int index = 0;
+                    using (StreamWriter sw = new StreamWriter(_directory + _gameFile))
+                    {
+
+                        sw.WriteLine("[");
+                        foreach (CardGame item in _players)
+                        {
+                            if (item.totalGames > 0)
+                            {
+                                sw.WriteLine("{");
+                                sw.WriteLine($"\"name\": \"{item.Name}\",");
+                                string text = string.Join(",", item.PointsPerGame);
+                                sw.WriteLine($"\"pointsPerGame\": \"{text}\",");
+                                sw.WriteLine($"\"pointsTotal\": \"{item.pointsTotal}\",");
+                                string text2 = string.Join(",", item.CardHands);
+                                sw.WriteLine($"\"cardHands\": \"{text2}\",");
+                                sw.WriteLine($"\"totalGames\": \"{item.totalGames}\"");
+                                if (index == _profiles.Count - 1)
+                                {
+                                    sw.WriteLine("}");
+                                }
+                                else
+                                {
+                                    sw.WriteLine("},");
+                                }
+                                index++;
+                            }
+                        }
+                        sw.WriteLine("]");
+                        sw.Close();
+
+                        Console.Clear();
+                        CardGame.pointer = 0;
+                        _menu = new Menu("Hello Admin, What Would You Like To Do Today?",
+                                         "Convert The Restaurant Reviews Database From SQL To JSON",
+                                         "Showcase Our 5 Star Rating System",
+                                         "Showcase Our Animated Bar Graph Review System",
+                                         "Play A Card Game",
+                                         "Exit");
+                        _menu.Display();
+                        Selection();
+                    }
+                }
+            }
+        }
+
+        public string outputCardSymbol(Card card)
+        {
+            switch (card.Value)
+            {
+                case 1:
+                    return $"A {card.Suite} ";
+
+                case 11:
+                    return $"J {card.Suite} ";
+
+                case 12:
+                    return $"Q {card.Suite} ";
+
+                case 13:
+                    return $"K {card.Suite} ";
+
+                default:
+                    return $"{card.Value} {card.Suite} ";
+            }
+        }
+
+        public void DisplayHand(CardGame p)
+        {
+            for (int i = 0; i < p.CardsInHand; i++)
+            {
+                if (p.Hand[i].Suite == "H" || p.Hand[i].Suite == "D")
+                {
+                    Console.ForegroundColor = ConsoleColor.DarkGreen;
+                    Console.BackgroundColor = ConsoleColor.Gray;
+                    Console.Write(outputCardSymbol(p.Hand[i]));
+                    Console.ForegroundColor = ConsoleColor.Gray;
+                    Console.BackgroundColor = ConsoleColor.Black;
+                    Console.Write(" ");
+                }
+                else
+                {
+                    Console.ForegroundColor = ConsoleColor.Magenta;
+                    Console.BackgroundColor = ConsoleColor.Gray;
+                    Console.Write(outputCardSymbol(p.Hand[i]));
+                    Console.ForegroundColor = ConsoleColor.Gray;
+                    Console.BackgroundColor = ConsoleColor.Black;
+                    Console.Write(" ");
+                }
             }
         }
 

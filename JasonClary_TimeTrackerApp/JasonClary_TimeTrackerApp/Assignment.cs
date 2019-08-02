@@ -43,13 +43,70 @@ namespace JasonClary_TimeTrackerApp
             //_menu.Display();
             //LoginSelect();
 
-            
+            //----------------SQL to Program----------------
+            // Declare a MySQL Connection
+            MySqlConnection conn = null;
+            string stm;
+            MySqlDataReader rdr;
+            MySqlCommand cmd;
+
+            try
+            {
+                // Open a connection to MySQL
+                conn = new MySqlConnection(cs);
+                conn.Open();
+
+                // Form SQL Statement
+                stm = "SELECT time_tracker_users.user_id, calendar_day, tracked_calendar_dates.calendar_date, days_of_week.day_name, " +
+                             "activity_categories.category_description, activity_descriptions.activity_description, activity_times.time_spent_on_activity " +
+                      "FROM activity_log " +
+                      "JOIN time_tracker_users ON activity_log.user_id = time_tracker_users.user_id " +
+                      "JOIN tracked_calendar_days ON activity_log.calendar_day = tracked_calendar_days.calendar_day_id " +
+                      "JOIN tracked_calendar_dates ON activity_log.calendar_date = tracked_calendar_dates.calendar_date_id " +
+                      "JOIN days_of_week ON activity_log.day_name = days_of_week.day_id " +
+                      "JOIN activity_categories ON activity_log.category_description = activity_categories.activity_category_id " +
+                      "JOIN activity_descriptions ON activity_log.activity_description = activity_descriptions.activity_description_id " +
+                      "JOIN activity_times ON activity_log.time_spent_on_activity = activity_times.activity_time_id;";
+
+                // Prepare SQL Statement
+                cmd = new MySqlCommand(stm, conn);
+
+                // Execute SQL Statement and Convert Results to a String
+                rdr = cmd.ExecuteReader();
+
+                // Output Results
+                while (rdr.Read())
+                {
+                    dayNum = int.Parse(rdr[1].ToString());
+                    calendarDate = DateTime.Parse(rdr[2].ToString());
+                    dayName = rdr[3].ToString();
+                    categoryDescription = rdr[4].ToString();
+                    activityDescription = rdr[5].ToString();
+                    activityTime = double.Parse(rdr[6].ToString());
+
+                    taskManager = new Task(dayNum, calendarDate, dayName, categoryDescription, activityDescription, activityTime);
+                    TaskList.Add(taskManager);
+                }
+                rdr.Close();
+            }
+            catch (MySqlException ex)
+            {
+                Console.WriteLine("Error: {0}", ex.ToString());
+            }
+            finally
+            {
+                if (conn != null)
+                {
+                    conn.Close();
+                }
+            }
+
             // Menu shown to the user
             _menu = new Menu($"Hello {taskManager.FirstName} {taskManager.LastName}, What Would You Like To Do Today?",
-                               "Enter Activity",
-                               "View Tracked Data",
-                               "Run Calculations",                             
-                               "Exit");
+                           "Enter Activity",
+                           "View Tracked Data",
+                           "Run Calculations",
+                           "Exit");
             _menu.Display();
             Selection();
         }
@@ -134,8 +191,30 @@ namespace JasonClary_TimeTrackerApp
 
             switch (selection)
             {
-                case 1: case 2: case 3: case 4: case 5: case 6: case 7: case 8: case 9: case 10: case 11: case 12: case 13:
-                case 14: case 15: case 16: case 17: case 18: case 19: case 20: case 21: case 22: case 23: case 24:
+                case 1:
+                case 2:
+                case 3:
+                case 4:
+                case 5:
+                case 6:
+                case 7:
+                case 8:
+                case 9:
+                case 10:
+                case 11:
+                case 12:
+                case 13:
+                case 14:
+                case 15:
+                case 16:
+                case 17:
+                case 18:
+                case 19:
+                case 20:
+                case 21:
+                case 22:
+                case 23:
+                case 24:
                     categoryDescription = ActivityCategories[selection - 1];
 
                     // New Sub-Menu
@@ -145,7 +224,7 @@ namespace JasonClary_TimeTrackerApp
 
                     ActivityDescriptions.Add("Back");
                     string[] actDescArray = ActivityDescriptions.ToArray();
-                    _menu = new Menu($"Pick an Activity Description",actDescArray);
+                    _menu = new Menu($"Pick an Activity Description", actDescArray);
                     _menu.Display();
                     ActivitySelect();
                     break;
@@ -173,9 +252,31 @@ namespace JasonClary_TimeTrackerApp
 
             switch (selection)
             {
-                case 1: case 2: case 3: case 4: case 5: case 6: case 7: case 8: case 9: case 10: case 11: case 12: case 13:
-                case 14: case 15: case 16: case 17: case 18: case 19: case 20: case 21: case 22: case 23: case 24:
-                    activityDescription = ActivityDescriptions[selection  -1];
+                case 1:
+                case 2:
+                case 3:
+                case 4:
+                case 5:
+                case 6:
+                case 7:
+                case 8:
+                case 9:
+                case 10:
+                case 11:
+                case 12:
+                case 13:
+                case 14:
+                case 15:
+                case 16:
+                case 17:
+                case 18:
+                case 19:
+                case 20:
+                case 21:
+                case 22:
+                case 23:
+                case 24:
+                    activityDescription = ActivityDescriptions[selection - 1];
 
                     // New Sub-Menu
                     Console.Clear();
@@ -189,7 +290,7 @@ namespace JasonClary_TimeTrackerApp
                     }
                     tempDates.Add("Back");
                     string[] dateArray = tempDates.ToArray();
-                    
+
                     _menu = new Menu($"What Date Did You Perform Activity?", dateArray);
                     _menu.Display();
                     DateSelect();
@@ -216,8 +317,32 @@ namespace JasonClary_TimeTrackerApp
 
             switch (selection)
             {
-                case 1: case 2: case 3: case 4: case 5: case 6: case 7: case 8: case 9: case 10: case 11: case 12: case 13:
-                case 14: case 15: case 16: case 17: case 18: case 19: case 20: case 21: case 22: case 23: case 24: case 25: case 26:
+                case 1:
+                case 2:
+                case 3:
+                case 4:
+                case 5:
+                case 6:
+                case 7:
+                case 8:
+                case 9:
+                case 10:
+                case 11:
+                case 12:
+                case 13:
+                case 14:
+                case 15:
+                case 16:
+                case 17:
+                case 18:
+                case 19:
+                case 20:
+                case 21:
+                case 22:
+                case 23:
+                case 24:
+                case 25:
+                case 26:
                     calendarDate = ActivityDates[selection - 1];
 
                     // New Sub-Menu
@@ -252,7 +377,7 @@ namespace JasonClary_TimeTrackerApp
                     double time = Validation.ValidateDouble("How Long Did You Perform That Activity? " +
                                 "\n(Keep in mind every 15 minutes is represented as a 0.25): (Format: 0.00) Between .25 and 24 hours",
                                 (double)0.25, (double)24.00);
-                    activityTime = Math.Round(time * 4, MidpointRounding.ToEven) / 4;   
+                    activityTime = Math.Round(time * 4, MidpointRounding.ToEven) / 4;
 
                     // Final Menu
                     Console.Clear();
@@ -261,17 +386,17 @@ namespace JasonClary_TimeTrackerApp
                     Task newTask = new Task(dayNum, calendarDate, dayName, categoryDescription, activityDescription, activityTime);
                     TaskList.Add(newTask);
 
-                    Console.WriteLine($"Day Number: {dayNum, -24}\n" +
-                                      $"Calendar Date: {calendarDate.ToShortDateString(), -24}\n" +
-                                      $"Day Of Week; {dayName, -24}\n" +
-                                      $"Category: {categoryDescription, -24}\n" +
-                                      $"Activity: {activityDescription, -24}\n" +
-                                      $"Time: {activityTime, -24}\n" +
+                    Console.WriteLine($"Day Number: {dayNum,-24}\n" +
+                                      $"Calendar Date: {calendarDate.ToShortDateString(),-24}\n" +
+                                      $"Day Of Week; {dayName,-24}\n" +
+                                      $"Category: {categoryDescription,-24}\n" +
+                                      $"Activity: {activityDescription,-24}\n" +
+                                      $"Time: {activityTime,-24}\n" +
                                       $"-----------------------------");
                     _menu = new Menu("Activity Entered!", "Enter Another Activity", "Back To Main Menu");
                     _menu.Display();
                     LastSelect();
-                    break;;
+                    break; ;
                 case 2:
                     Console.Clear();
                     List<string> tempDates = new List<string>();
