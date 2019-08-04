@@ -25,18 +25,19 @@ namespace JasonClary_TimeTrackerApp
         public double ActivityTime { get; set; }
         public string FirstName { get; set; }
         public string LastName { get; set; }
-        public string UserId { get; set; }
+        public int UserId { get; set; }
         public string Password { get; set; }
 
         // Task variables
-        private int _dayNum;
-        private DateTime _calendarDate;
-        private string _dayName;
-        private string _categoryDescription;
-        private string _activityDescriptions;
-        private double _activityTime;
+        public int _taskId;
+        public int _dayNum;
+        public int _calendarDate;
+        public int _dayName;
+        public int _categoryDescription;
+        public int _activityDescriptions;
+        public int _activityTime;
 
-        public Task(int dayNum, DateTime calDate, string dayName, string catDesc, string actDesc, double actTime)
+        public Task(int dayNum, int calDate, int dayName, int catDesc, int actDesc, int actTime)
         {
             _dayNum = dayNum;
             _calendarDate = calDate;
